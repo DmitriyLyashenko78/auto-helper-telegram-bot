@@ -5,6 +5,7 @@ import { getDtcReply } from "../src/application/get-dtc-reply.js";
 
 const dtcCodes = new Map([
   ["P0420", "Catalyst System Efficiency Below Threshold Bank 1"],
+  ["U0100", "Lost Communication With ECM/PCM"],
 ]);
 
 test("возвращает расшифровку существующего кода", () => {
@@ -12,6 +13,18 @@ test("возвращает расшифровку существующего к�
 
   assert.match(reply, /Код P0420/);
   assert.match(reply, /Catalyst System Efficiency/);
+});
+
+test("понимает код с русской буквой в начале", () => {
+  const reply = getDtcReply({ text: "Р0420", dtcCodes });
+
+  assert.match(reply, /Код P0420/);
+});
+
+test("понимает код, введённый клавишей U в русской раскладке", () => {
+  const reply = getDtcReply({ text: "Г0100", dtcCodes });
+
+  assert.match(reply, /Код U0100/);
 });
 
 test("возвращает инструкцию для команды start", () => {

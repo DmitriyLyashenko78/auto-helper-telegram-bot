@@ -3,6 +3,7 @@ const HELP_TEXT = [
   "",
   "Отправьте код в формате: буква P, B, C или U и 4 цифры.",
   "Примеры: P0420, P0300, B0020, C0035, U0100.",
+  "Первую букву можно ввести русской раскладкой: Р0420, В0020, С0035, У0100.",
   "",
   "Коды производителя могут отсутствовать или иметь другое значение для конкретной марки автомобиля.",
 ].join("\n");
@@ -42,5 +43,19 @@ function normalizeDtcCode(text) {
   if (typeof text !== "string") return null;
 
   const normalized = text.replace(/\s/g, "").toUpperCase();
-  return /^[PBCU]\d{4}$/.test(normalized) ? normalized : null;
+  const code = replaceCyrillicPrefix(normalized);
+  return /^[PBCU]\d{4}$/.test(code) ? code : null;
+}
+
+function replaceCyrillicPrefix(code) {
+  const latinPrefixByCyrillic = {
+    Р: "P",
+    В: "B",
+    С: "C",
+    У: "U",
+    Г: "U",
+  };
+
+  const prefix = latinPrefixByCyrillic[code[0]] || code[0];
+  return `${prefix}${code.slice(1)}`;
 }
