@@ -1,0 +1,24 @@
+@startuml C4_Level_2_Telegram_Bot
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 Level 2 — контейнеры Telegram-бота
+
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "Пользователь Telegram", "Отправляет OBD-II код и получает его расшифровку.")
+System_Ext(telegram, "Telegram", "Telegram client и Bot API")
+System_Ext(cloudflare, "Cloudflare Quick Tunnel", "Временный HTTPS-адрес для локального приложения")
+
+System_Boundary(botSystem, "Telegram-бот расшифровки OBD-II") {
+  Container(botApp, "Приложение бота", "Node.js, Fastify", "Принимает webhook, ищет код и отправляет ответ.")
+  ContainerDb(dtcData, "Локальная база DTC-кодов", "JSON-файл", "Универсальные OBD-II коды и их английские расшифровки.")
+}
+
+Rel(user, telegram, "Отправляет код, получает ответ", "Telegram client")
+Rel(telegram, cloudflare, "Доставляет входящее сообщение", "Webhook / HTTPS")
+Rel(cloudflare, botApp, "Перенаправляет запрос", "HTTPS → localhost")
+Rel(botApp, telegram, "Отправляет ответ", "Bot API / HTTPS")
+Rel(botApp, dtcData, "Читает расшифровку кода", "Файловая система")
+
+SHOW_LEGEND()
+@enduml

@@ -1,0 +1,19 @@
+{
+  "name": "telegram-console-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Учебный Telegram-бот на Fastify без Telegram-библиотек",
+  "scripts": {
+    "start": "node --env-file=.env src/main.js",
+    "dtc:build": "node --no-warnings scripts/build-dtc-data.js",
+    "webhook:register": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-webhook.ps1",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "fastify": "^5.0.0"
+  }
+}
