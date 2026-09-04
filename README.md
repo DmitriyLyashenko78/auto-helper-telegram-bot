@@ -32,6 +32,16 @@
 
 Проверка состояния сервиса: `http://localhost:3000/health`.
 
+## Развёртывание на Vercel
+
+Для Vercel используются функции `api/health.js` и `api/telegram/webhook.js`.
+После импорта репозитория в Vercel нужно добавить переменные окружения
+`TELEGRAM_BOT_TOKEN` и `TELEGRAM_WEBHOOK_SECRET`, затем зарегистрировать в
+Telegram адрес `https://<имя-проекта>.vercel.app/api/telegram/webhook`.
+
+Локальный запуск через `npm start` остаётся отдельным режимом: он использует
+Fastify и Cloudflare Quick Tunnel.
+
 ## Формат кода
 
 Поддерживается буква `P`, `B`, `C` или `U` и четыре цифры: `P0420`, `P0300`, `B0020`, `C0035`, `U0100`.
