@@ -10,11 +10,11 @@ Person(user, "Пользователь Telegram", "Отправляет OBD-II �
 System(bot, "Telegram-бот расшифровки OBD-II", "Учебное приложение на Node.js. Ищет универсальный код в локальной базе и формирует ответ.")
 
 System_Ext(telegram, "Telegram", "Доставляет сообщения пользователя боту и ответы бота пользователю через Bot API.")
-System_Ext(cloudflare, "Cloudflare Quick Tunnel", "Даёт Telegram защищённый временный адрес для доступа к локальному приложению.")
+System_Ext(vercel, "Vercel", "Облачная платформа, на которой развёрнут Telegram-бот.")
 
 Rel(user, telegram, "Отправляет код ошибки, читает ответ", "Telegram client")
-Rel(telegram, cloudflare, "Передаёт webhook с сообщением", "HTTPS")
-Rel(cloudflare, bot, "Перенаправляет webhook на локальный сервер", "HTTPS → localhost")
+Rel(telegram, vercel, "Передаёт webhook с сообщением", "HTTPS")
+Rel(vercel, bot, "Запускает функцию webhook", "HTTPS")
 Rel(bot, telegram, "Отправляет расшифровку", "Telegram Bot API / HTTPS")
 
 SHOW_LEGEND()

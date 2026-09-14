@@ -6,18 +6,20 @@ title C4 Level 3 — компоненты приложения Telegram-бота
 LAYOUT_TOP_DOWN()
 
 Container_Ext(telegram, "Telegram", "Telegram Bot API", "Передаёт webhook и принимает ответы.")
+System_Ext(vercel, "Vercel", "Запускает serverless-функцию webhook.")
 ContainerDb_Ext(dtcData, "Локальная база DTC-кодов", "JSON-файл", "Хранит универсальные OBD-II коды.")
 
-Container_Boundary(botApp, "Приложение бота (Node.js / Fastify)") {
-  Component(webhookServer, "Webhook-сервер", "Fastify route", "Принимает POST /telegram/webhook и проверяет секретный заголовок.")
+Container_Boundary(botApp, "Webhook-функция приложения (Node.js / Vercel Function)") {
+  Component(webhookServer, "Webhook-обработчик", "api/telegram/webhook.js", "Принимает POST /api/telegram/webhook и проверяет секретный заголовок.")
   Component(updateProcessor, "Обработчик Telegram Update", "Функция processTelegramUpdate", "Извлекает текст и данные чата из входящего сообщения.")
   Component(replyBuilder, "Формирование ответа", "Функция getDtcReply", "Проверяет формат OBD-II кода и строит текст ответа.")
   Component(dtcLoader, "Загрузка DTC-данных", "Функция loadDtcDatabase", "Один раз читает JSON-файл и создаёт Map кодов.")
-  Component(messageSender, "Отправка сообщения", "Адаптер sendTelegramMessage", "Вызывает Telegram Bot API для отправки ответа.")
-  Component(consoleOutput, "Вывод в консоль", "Функция printMessage", "Печатает входящее сообщение для разработки.")
+  Component(messageSender, "Отправка сообщения", "Функция sendTelegramMessageWithFetch", "Вызывает Telegram Bot API для отправки ответа.")
+  Component(consoleOutput, "Вывод в журнал", "Функция printMessage", "Пишет входящее сообщение в журналы Vercel.")
 }
 
-Rel(telegram, webhookServer, "Передаёт Update", "Webhook / HTTPS")
+Rel(telegram, vercel, "Передаёт Update", "Webhook / HTTPS")
+Rel(vercel, webhookServer, "Вызывает функцию", "HTTPS")
 Rel(webhookServer, updateProcessor, "Передаёт тело Update")
 Rel(updateProcessor, replyBuilder, "Передаёт текст сообщения")
 Rel(updateProcessor, consoleOutput, "Печатает сообщение")
