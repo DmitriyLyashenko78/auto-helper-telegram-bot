@@ -7,13 +7,20 @@
   "scripts": {
     "start": "node --env-file=.env src/main.js",
     "dtc:build": "node --no-warnings scripts/build-dtc-data.js",
+    "supabase:seed:build": "node scripts/build-supabase-seed.js",
     "webhook:register": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-webhook.ps1",
-    "test": "node --test"
+    "test": "node --test test/*.test.js",
+    "test:deno": "deno test --config supabase/functions/deno.json supabase/functions",
+    "lint:deno": "deno lint supabase/functions",
+    "check:deno": "deno check --config supabase/functions/deno.json supabase/functions/telegram-webhook/index.ts"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "fastify": "^5.0.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.117.0"
   }
 }
