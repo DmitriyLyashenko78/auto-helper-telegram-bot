@@ -1,11 +1,20 @@
 import { type FindDtcDescription, getDtcReply } from "../_shared/dtc.ts";
-import { getTelegramTextMessage, type TelegramChatId } from "../_shared/telegram.ts";
+import {
+  getTelegramTextMessage,
+  type TelegramChatId,
+  type TelegramTextMessage,
+} from "../_shared/telegram.ts";
 
 interface TelegramWebhookDependencies {
   webhookSecret: string;
   findDescription: FindDtcDescription;
   sendMessage: (message: {
     chatId: TelegramChatId;
+    text: string;
+  }) => Promise<void>;
+  saveIncomingMessage?: (message: TelegramTextMessage) => Promise<string>;
+  saveOutgoingMessage?: (message: {
+    clientId: string;
     text: string;
   }) => Promise<void>;
   logError?: (message: string, error: unknown) => void;
@@ -15,6 +24,8 @@ export function createTelegramWebhookHandler({
   webhookSecret,
   findDescription,
   sendMessage,
+  saveIncomingMessage,
+  saveOutgoingMessage,
   logError = console.error,
 }: TelegramWebhookDependencies): (request: Request) => Promise<Response> {
   return async (request: Request): Promise<Response> => {
@@ -39,6 +50,15 @@ export function createTelegramWebhookHandler({
       return Response.json({ ok: true, processed: false });
     }
 
+    let clientId: string | null = null;
+    if (saveIncomingMessage) {
+      try {
+        clientId = await saveIncomingMessage(message);
+      } catch (error) {
+        logError("Не удалось сохранить входящее сообщение", error);
+      }
+    }
+
     try {
       const reply = await getDtcReply({
         text: message.text,
@@ -46,6 +66,15 @@ export function createTelegramWebhookHandler({
       });
 
       await sendMessage({ chatId: message.chatId, text: reply });
+
+      if (clientId && saveOutgoingMessage) {
+        try {
+          await saveOutgoingMessage({ clientId, text: reply });
+        } catch (error) {
+          logError("Не удалось сохранить исходящее сообщение", error);
+        }
+      }
+
       return Response.json({ ok: true, processed: true });
     } catch (error) {
       logError("Не удалось обработать Telegram Update", error);

@@ -2,7 +2,13 @@ export type TelegramChatId = number | string;
 
 export interface TelegramTextMessage {
   chatId: TelegramChatId;
+  messageId?: number;
   text: string;
+  chatType?: string;
+  title?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export function getTelegramTextMessage(update: unknown): TelegramTextMessage | null {
@@ -11,11 +17,22 @@ export function getTelegramTextMessage(update: unknown): TelegramTextMessage | n
   const chat = asRecord(message?.chat);
 
   if (typeof message?.text !== "string") return null;
+  if (!chat) return null;
 
-  const chatId = chat?.id;
+  const chatId = chat.id;
   if (typeof chatId !== "number" && typeof chatId !== "string") return null;
 
-  return { chatId, text: message.text };
+  const result: TelegramTextMessage = { chatId, text: message.text };
+  if (typeof message.message_id === "number" && Number.isSafeInteger(message.message_id)) {
+    result.messageId = message.message_id;
+  }
+  copyString(chat, "type", result, "chatType");
+  copyString(chat, "title", result, "title");
+  copyString(chat, "username", result, "username");
+  copyString(chat, "first_name", result, "firstName");
+  copyString(chat, "last_name", result, "lastName");
+
+  return result;
 }
 
 export async function sendTelegramMessage({
@@ -46,6 +63,16 @@ export async function sendTelegramMessage({
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" ? value as Record<string, unknown> : null;
+}
+
+function copyString(
+  source: Record<string, unknown>,
+  sourceKey: string,
+  target: TelegramTextMessage,
+  targetKey: "chatType" | "title" | "username" | "firstName" | "lastName",
+): void {
+  const value = source[sourceKey];
+  if (typeof value === "string" && value) target[targetKey] = value;
 }
 
 async function readJson(response: Response): Promise<unknown> {

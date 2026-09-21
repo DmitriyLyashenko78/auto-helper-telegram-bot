@@ -53,6 +53,63 @@ Deno.test("looks up a code and sends the reply", async () => {
   assertIncludes(sentMessages[0].text, "Catalyst System Efficiency");
 });
 
+Deno.test("stores incoming and outgoing messages", async () => {
+  const stored: unknown[] = [];
+  const handler = createHandler({
+    saveIncomingMessage: (message) => {
+      stored.push({ direction: "incoming", message });
+      return Promise.resolve("client-1");
+    },
+    saveOutgoingMessage: (message) => {
+      stored.push({ direction: "outgoing", message });
+      return Promise.resolve();
+    },
+  });
+
+  const response = await handler(telegramRequest(JSON.stringify({
+    message: {
+      message_id: 7,
+      text: "P0420",
+      chat: { id: 123, type: "private", username: "driver" },
+    },
+  })));
+
+  assertEquals(response.status, 200);
+  assertEquals(stored.length, 2);
+  assertEquals(stored[0], {
+    direction: "incoming",
+    message: {
+      chatId: 123,
+      text: "P0420",
+      messageId: 7,
+      chatType: "private",
+      username: "driver",
+    },
+  });
+  assertEquals((stored[1] as { direction: string }).direction, "outgoing");
+});
+
+Deno.test("continues replying when conversation storage fails", async () => {
+  const loggedErrors: unknown[] = [];
+  let sent = false;
+  const handler = createHandler({
+    saveIncomingMessage: () => Promise.reject(new Error("storage unavailable")),
+    sendMessage: () => {
+      sent = true;
+      return Promise.resolve();
+    },
+    logError: (_message, error) => loggedErrors.push(error),
+  });
+
+  const response = await handler(telegramRequest(JSON.stringify({
+    message: { message_id: 7, text: "P0420", chat: { id: 123 } },
+  })));
+
+  assertEquals(response.status, 200);
+  assertEquals(sent, true);
+  assertEquals(loggedErrors.length, 1);
+});
+
 Deno.test("returns processing_error when a dependency fails", async () => {
   const loggedErrors: unknown[] = [];
   const handler = createHandler({
@@ -82,6 +139,14 @@ interface HandlerOverrides {
     chatId: number | string;
     text: string;
   }) => Promise<void>;
+  saveIncomingMessage?: (message: {
+    chatId: number | string;
+    text: string;
+  }) => Promise<string>;
+  saveOutgoingMessage?: (message: {
+    clientId: string;
+    text: string;
+  }) => Promise<void>;
   logError?: (message: string, error: unknown) => void;
 }
 
@@ -90,6 +155,8 @@ function createHandler(overrides: HandlerOverrides = {}) {
     webhookSecret: "test-secret",
     findDescription: overrides.findDescription ?? (() => Promise.resolve(null)),
     sendMessage: overrides.sendMessage ?? (() => Promise.resolve()),
+    saveIncomingMessage: overrides.saveIncomingMessage,
+    saveOutgoingMessage: overrides.saveOutgoingMessage,
     logError: overrides.logError ?? (() => undefined),
   });
 }

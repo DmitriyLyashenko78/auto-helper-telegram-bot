@@ -12,7 +12,7 @@
     "test": "node --test test/*.test.js",
     "test:deno": "deno test --config supabase/functions/deno.json supabase/functions",
     "lint:deno": "deno lint supabase/functions",
-    "check:deno": "deno check --config supabase/functions/deno.json supabase/functions/telegram-webhook/index.ts"
+    "check:deno": "deno check --config supabase/functions/deno.json supabase/functions/telegram-webhook/index.ts supabase/functions/clients/index.ts supabase/functions/messages/index.ts"
   },
   "engines": {
     "node": ">=20"
