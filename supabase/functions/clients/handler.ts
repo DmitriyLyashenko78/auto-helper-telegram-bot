@@ -30,9 +30,6 @@ export function createClientsHandler({
   logError?: (message: string, error: unknown) => void;
 }): (request: Request) => Promise<Response> {
   return async (request) => {
-    const unauthorized = requireApiSecret(request, apiSecret);
-    if (unauthorized) return unauthorized;
-
     try {
       if (request.method === "GET") {
         const pagination = parsePagination(new URL(request.url));
@@ -41,6 +38,8 @@ export function createClientsHandler({
       }
 
       if (request.method === "POST") {
+        const unauthorized = requireApiSecret(request, apiSecret);
+        if (unauthorized) return unauthorized;
         const body = await readJsonObject(request);
         if (isResponse(body)) return body;
         const client = parseClientInput(body);

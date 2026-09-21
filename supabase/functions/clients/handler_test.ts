@@ -1,7 +1,17 @@
 import { type ClientInput, type ClientsRepository, createClientsHandler } from "./handler.ts";
 
-Deno.test("clients endpoint rejects a missing API secret", async () => {
+Deno.test("clients endpoint allows public reads", async () => {
   const response = await createHandler()(new Request("http://localhost/clients"));
+  assertEquals(response.status, 200);
+});
+
+Deno.test("clients endpoint protects writes with the API secret", async () => {
+  const response = await createHandler()(
+    new Request("http://localhost/clients", {
+      method: "POST",
+      body: JSON.stringify({ telegram_chat_id: "123" }),
+    }),
+  );
   assertEquals(response.status, 401);
 });
 

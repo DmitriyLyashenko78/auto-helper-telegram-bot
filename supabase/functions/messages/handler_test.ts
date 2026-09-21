@@ -9,9 +9,23 @@ Deno.test("messages endpoint lists all messages by default", async () => {
       received = options;
       return Promise.resolve([]);
     },
-  })(apiRequest("http://localhost/messages"));
+  })(new Request("http://localhost/messages"));
   assertEquals(response.status, 200);
   assertEquals(received, { clientId: undefined, limit: 50, offset: 0 });
+});
+
+Deno.test("messages endpoint protects writes with the API secret", async () => {
+  const response = await createHandler()(
+    new Request("http://localhost/messages", {
+      method: "POST",
+      body: JSON.stringify({
+        client_id: clientId,
+        direction: "incoming",
+        text: "P0420",
+      }),
+    }),
+  );
+  assertEquals(response.status, 401);
 });
 
 Deno.test("messages endpoint lists one client's messages", async () => {
